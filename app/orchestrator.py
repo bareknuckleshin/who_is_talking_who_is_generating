@@ -140,7 +140,10 @@ class GameOrchestrator:
         self._timeout_tasks[session_id] = asyncio.create_task(self._timeout_worker(session_id))
 
     async def _timeout_worker(self, session_id: str):
-        await asyncio.sleep(settings.human_turn_timeout_secs)
+        try:
+            await asyncio.sleep(settings.human_turn_timeout_secs)
+        except asyncio.CancelledError:
+            return
         await self.handle_timeout_pass(session_id)
 
     async def _run_llm_turn(self, session_id: str):
