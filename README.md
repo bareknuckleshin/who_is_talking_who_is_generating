@@ -11,6 +11,12 @@ cp .env.example .env
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+## Docker 실행 가이드
+
+Docker로 실행하려면 아래 문서를 참고하세요.
+
+- [DOCKER_RUN.md](./DOCKER_RUN.md)
+
 ## Windows 11 + WSL2 상세 가이드
 
 Windows 11 + WSL2에서 프로젝트 실행 환경을 처음부터 구성하려면 아래 문서를 참고하세요.
