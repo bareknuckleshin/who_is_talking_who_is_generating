@@ -1,3 +1,4 @@
+import asyncio
 import json
 import sys
 import tempfile
@@ -93,6 +94,17 @@ class OrchestratorTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(parsed["pick_seat"], "B")
         self.assertEqual(parsed["confidence"], 1.0)
         self.assertEqual(parsed["why"], "이유")
+
+    async def test_timeout_worker_returns_cleanly_when_cancelled(self):
+        session_id = self.orchestrator.create_session("주제", num_llm_speakers=1, turns_per_speaker=1, max_chars=8, difficulty="normal")
+        task = self.orchestrator._timeout_tasks.get(session_id)
+        self.assertIsNone(task)
+
+        task = asyncio.create_task(self.orchestrator._timeout_worker(session_id))
+        await asyncio.sleep(0)
+        task.cancel()
+        await task
+        self.assertFalse(task.cancelled())
 
     async def test_handle_human_message_updates_turn_state_and_status(self):
         session_id = self.orchestrator.create_session("주제", num_llm_speakers=1, turns_per_speaker=1, max_chars=8, difficulty="normal")
