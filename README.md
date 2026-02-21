@@ -80,6 +80,15 @@ curl -X POST http://127.0.0.1:8000/sessions \
 }
 ```
 
+
+## 로컬 유닛 테스트
+
+주요 로직(오케스트레이터/프롬프트/유틸/스토어)에 대한 유닛 테스트를 `tests/`에 추가했습니다.
+
+```bash
+python -m unittest discover -s tests -v
+```
+
 ## WebSocket 테스트
 
 ```bash
