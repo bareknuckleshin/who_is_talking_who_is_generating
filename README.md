@@ -11,6 +11,12 @@ cp .env.example .env
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+## Windows 11 + WSL2 상세 가이드
+
+Windows 11 + WSL2에서 프로젝트 실행 환경을 처음부터 구성하려면 아래 문서를 참고하세요.
+
+- [WSL_WINDOWS11_SETUP.md](./WSL_WINDOWS11_SETUP.md)
+
 ## Windows 11 + WSL(2) 체크리스트
 
 WSL 환경에서 바로 실행 가능하지만, 아래 5가지를 확인하면 문제를 크게 줄일 수 있습니다.
