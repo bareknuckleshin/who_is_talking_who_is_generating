@@ -7,10 +7,11 @@ type Props = {
   enabled: boolean;
   onChange: (next: string) => void;
   onSend: () => void;
+  hintText: string;
   countdownSecs: number | null;
 };
 
-export default function ChatInput({ value, maxChars, enabled, onChange, onSend, countdownSecs }: Props) {
+export default function ChatInput({ value, maxChars, enabled, onChange, onSend, hintText, countdownSecs }: Props) {
   const chars = useMemo(() => countChars(value), [value]);
 
   return (
@@ -18,7 +19,7 @@ export default function ChatInput({ value, maxChars, enabled, onChange, onSend, 
       <input
         value={value}
         maxLength={maxChars}
-        placeholder={enabled ? '메시지를 입력하세요' : '상대 발화 중...'}
+        placeholder={hintText}
         disabled={!enabled}
         onChange={(event) => onChange(clampText(event.target.value, maxChars))}
         onKeyDown={(event) => {

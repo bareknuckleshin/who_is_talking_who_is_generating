@@ -55,7 +55,7 @@ export class SessionWsClient {
       try {
         const parsed = JSON.parse(message.data) as InboundEvent;
         if (!parsed || typeof parsed.type !== 'string') {
-          console.warn('Unknown event payload:', message.data);
+          console.warn('Unknown event payload');
           return;
         }
         this.opts.onEvent(parsed);

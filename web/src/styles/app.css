@@ -70,20 +70,12 @@ button:disabled {
   margin-bottom: 12px;
 }
 
-.seat-list {
-  display: flex;
-  gap: 8px;
-}
-
-.seat-chip {
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #e5e7eb;
-}
-
-.seat-chip.active {
-  background: #bfdbfe;
+.header-meta {
+  display: grid;
+  gap: 6px;
+  text-align: right;
+  color: #4b5563;
+  font-size: 14px;
 }
 
 .banner {
@@ -172,4 +164,10 @@ button:disabled {
   background: white;
   border-radius: 12px;
   padding: 20px;
+}
+
+.seat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
 }

@@ -10,6 +10,8 @@ import type { InboundEvent } from '../types/events';
 import type { ConnectionState, JudgeResult, Message, SessionState, TypingState } from '../types/models';
 import { getLastSeenMessageId, getOrCreateClientId, setLastSeenMessageId } from '../utils/storage';
 
+const HUMAN_SEAT = 'A';
+
 const defaultState = (sessionId: string): SessionState => ({
   sessionId,
   topic: '',
@@ -123,6 +125,9 @@ export default function SessionPage() {
         }
         return;
       case 'message.typing':
+        if (event.seat === HUMAN_SEAT) {
+          return;
+        }
         setTypingState((prev) => ({ ...prev, [event.seat]: true }));
         return;
       case 'message.new':
@@ -167,11 +172,12 @@ export default function SessionPage() {
     }
   };
 
-  const humanTurn = sessionState.currentSpeakerSeat === 'A';
+  const isMyTurn = sessionState.currentSpeakerSeat === HUMAN_SEAT;
+  const turnHintText = isMyTurn ? '메시지 입력' : '상대 발화 중...';
 
   const sendHumanMessage = () => {
     const text = input.trim();
-    if (!humanTurn || !text) {
+    if (!isMyTurn || !text) {
       return;
     }
     wsClientRef.current?.send({
@@ -187,8 +193,8 @@ export default function SessionPage() {
       <HeaderBar
         topic={sessionState.topic}
         status={sessionState.status}
-        seats={sessionState.participants}
-        currentSpeakerSeat={sessionState.currentSpeakerSeat}
+        participantsCount={sessionState.participants.length}
+        isMyTurn={isMyTurn}
       />
       {connectionState.reconnecting && <div className="banner">재연결 중...</div>}
       {connectionState.lastError && <div className="banner error">{connectionState.lastError}</div>}
@@ -196,9 +202,10 @@ export default function SessionPage() {
       <ChatInput
         value={input}
         maxChars={sessionState.maxChars}
-        enabled={humanTurn}
+        enabled={isMyTurn}
         onChange={setInput}
         onSend={sendHumanMessage}
+        hintText={turnHintText}
         countdownSecs={countdownSecs}
       />
       <JudgeModal result={judgeResult} onClose={() => setJudgeResult(null)} />

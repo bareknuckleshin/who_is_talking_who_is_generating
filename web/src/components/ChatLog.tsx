@@ -21,9 +21,9 @@ export default function ChatLog({ messages, typingState }: Props) {
       ))}
       {Object.entries(typingState)
         .filter(([, isTyping]) => isTyping)
-        .map(([seat]) => (
-          <div key={seat} className="typing-indicator">
-            {seat} 입력 중...
+        .map(([_seat], index) => (
+          <div key={`typing-${index}`} className="typing-indicator">
+            상대가 입력 중...
           </div>
         ))}
       <div ref={bottomRef} />
