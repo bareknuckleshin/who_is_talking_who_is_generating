@@ -138,3 +138,17 @@ app/
 scripts/
   ws_test.py
 ```
+
+## 프론트엔드(Web UI) 실행
+
+React + Vite + TypeScript 기반 Web UI는 `web/` 디렉터리에 있습니다.
+
+```bash
+cd web
+cp .env.example .env
+# VITE_API_BASE_URL=http://localhost:8000
+npm install
+npm run dev
+```
+
+자세한 내용은 [`web/README.md`](./web/README.md)를 참고하세요.
