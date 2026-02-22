@@ -64,7 +64,7 @@ if "pydantic_settings" not in sys.modules:
     pydantic_settings_stub.SettingsConfigDict = SettingsConfigDict
     sys.modules["pydantic_settings"] = pydantic_settings_stub
 
-from app.orchestrator import GameOrchestrator
+from app.orchestrator import PASS_MESSAGES, GameOrchestrator
 from app.store import SQLiteStore
 
 
@@ -105,6 +105,31 @@ class OrchestratorTestCase(unittest.IsolatedAsyncioTestCase):
         task.cancel()
         await task
         self.assertFalse(task.cancelled())
+
+
+    async def test_handle_timeout_pass_uses_random_pass_pool(self):
+        session_id = self.orchestrator.create_session("주제", num_llm_speakers=1, turns_per_speaker=5, max_chars=160, difficulty="normal")
+        self.store.update_session(
+            session_id,
+            status="IN_PROGRESS",
+            turn_state={"current_speaker_seat": "A", "turn_counts": {"A": 0, "B": 0}, "turn_index": 0},
+        )
+
+        self.orchestrator.rng.seed(7)
+        auto_messages = []
+        for idx in range(3):
+            await self.orchestrator.handle_timeout_pass(session_id)
+            latest = self.store.list_messages(session_id)[-1]["text"]
+            auto_messages.append(latest)
+            self.assertIn(latest, PASS_MESSAGES)
+            self.assertLessEqual(len(latest), 160)
+            if idx < 2:
+                session = self.store.get_session(session_id)
+                turn_state = json.loads(session["turn_state_json"])
+                turn_state["current_speaker_seat"] = "A"
+                self.store.update_session(session_id, status="IN_PROGRESS", turn_state=turn_state)
+
+        self.assertGreaterEqual(len(set(auto_messages)), 2)
 
     async def test_handle_human_message_updates_turn_state_and_status(self):
         session_id = self.orchestrator.create_session("주제", num_llm_speakers=1, turns_per_speaker=1, max_chars=8, difficulty="normal")

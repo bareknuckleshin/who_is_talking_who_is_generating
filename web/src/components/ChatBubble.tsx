@@ -10,7 +10,7 @@ export default function ChatBubble({ message, isHumanSeat }: Props) {
     <div className={`bubble-row ${isHumanSeat ? 'right' : 'left'}`}>
       <div className={`chat-bubble ${isHumanSeat ? 'human' : 'llm'}`}>
         <div className="meta">
-          <strong>{message.seat}</strong>
+          <span className="seat-label">{message.seat}</span>
           <span>#{message.turnIndex}</span>
         </div>
         <p>{message.text}</p>

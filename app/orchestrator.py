@@ -13,7 +13,18 @@ from app.prompts import build_judge_messages, build_speaker_messages
 from app.store import SQLiteStore
 from app.utils import clamp_text, pick_next_speaker, seat_labels
 
-PASS_MESSAGE = "잠깐 자리 비웠어. 다시 이어가자."
+PASS_MESSAGES: list[str] = [
+    "잠깐 다른 일 했어. 다시 이어가자.",
+    "미안, 잠깐 자리 비웠어. 계속하자.",
+    "잠시 끊겼네. 다시 얘기하자.",
+    "잠깐 확인할 게 있었어. 이어가자.",
+    "잠깐 바빴어. 다시 돌아왔어.",
+    "잠시 멈췄네. 계속해보자.",
+    "잠깐 전화 왔었어. 이어가자.",
+    "잠시 정신 없었어. 다시 얘기하자.",
+    "잠깐 딴짓했네. 계속해보자.",
+    "잠시 비었어. 다시 이어가자.",
+]
 SPEAKER_FALLBACK = "음… 잠깐 생각이 끊겼네. 너는 어떻게 생각해?"
 JUDGE_FALLBACK = "PICK=A CONF=0.5 WHY=판단 근거가 부족함"
 
@@ -241,7 +252,8 @@ class GameOrchestrator:
                 return
             turn_state["turn_index"] += 1
             turn_idx = turn_state["turn_index"]
-            clamped = clamp_text(PASS_MESSAGE, session["max_chars"])
+            pass_text = self.rng.choice(PASS_MESSAGES)
+            clamped = clamp_text(pass_text, session["max_chars"])
             msg_id = self.store.add_message(session_id, "A", turn_idx, clamped)
             turn_state["turn_counts"]["A"] += 1
             turn_state["current_speaker_seat"] = None
