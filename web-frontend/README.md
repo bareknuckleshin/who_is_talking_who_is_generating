@@ -3,7 +3,7 @@
 ## 실행 방법
 
 ```bash
-cd web
+cd web-frontend
 cp .env.example .env
 npm install
 npm run dev
@@ -13,7 +13,7 @@ npm run dev
 
 ## 환경 변수
 
-`web/.env` 파일:
+`web-frontend/.env` 파일:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:8000
