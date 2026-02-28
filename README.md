@@ -6,8 +6,8 @@
 .
 ├─ backend/        # FastAPI + WebSocket 서버
 ├─ web-frontend/   # React + Vite 웹 클라이언트
-├─ ios-app/        # iPhone 네이티브 앱(SwiftUI + URLSession)
-└─ android-app/    # Android 앱(현재 미구현 placeholder)
+├─ ios-app/        # iPhone 앱(iOS SwiftUI 래퍼)
+└─ android-app/    # Android 앱(네이티브 Kotlin + Compose)
 ```
 
 ## 추천 구조 반영 사항
@@ -16,8 +16,8 @@
 
 - 백엔드 관련 문서/테스트/도커 파일을 `backend/`로 일원화
 - 웹 프론트는 `web-frontend/`로 독립 실행 가능
-- iOS는 세션 생성/채팅/웹소켓을 네이티브로 처리하는 SwiftUI 앱 제공
-- Android는 추후 구현을 위한 명확한 placeholder 문서 제공
+- iOS는 웹 게임을 바로 실행할 수 있는 SwiftUI + WKWebView 앱 스캐폴드 제공
+- Android는 WebView 없이 동작하는 네이티브 Kotlin + Compose 앱 제공
 
 ## 빠른 시작
 
@@ -52,4 +52,4 @@ cd ios-app
 - backend 문서: [`backend/README.md`](./backend/README.md)
 - web 문서: [`web-frontend/README.md`](./web-frontend/README.md)
 - ios 문서: [`ios-app/README.md`](./ios-app/README.md)
-- android placeholder: [`android-app/README.md`](./android-app/README.md)
+- android 문서: [`android-app/README.md`](./android-app/README.md)
