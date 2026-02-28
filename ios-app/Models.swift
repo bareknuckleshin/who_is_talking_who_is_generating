@@ -28,6 +28,7 @@ struct SessionStateEvent: Decodable {
     let turn_counts: [String: Int]
     let current_speaker_seat: String?
     let max_chars: Int
+    let sequence_id: Int?
 }
 
 struct MessageNewEvent: Decodable {
@@ -36,6 +37,16 @@ struct MessageNewEvent: Decodable {
     let turn_index: Int
     let seat: String
     let text: String
+    let sequence_id: Int?
+}
+
+struct MessageDeltaEvent: Decodable {
+    let type: String
+    let message_id: String
+    let turn_index: Int
+    let seat: String
+    let delta: String
+    let sequence_id: Int?
 }
 
 struct TurnRequestHumanEvent: Decodable {
@@ -53,13 +64,14 @@ struct SessionFinishedEvent: Decodable {
     let pick_seat: String
     let confidence: Double
     let why: String
+    let sequence_id: Int?
 }
 
-struct ChatMessage: Identifiable {
+struct ChatMessage: Identifiable, Codable {
     let id: String
     let turnIndex: Int
     let seat: String
-    let text: String
+    var text: String
 }
 
 struct JudgeResult {
@@ -70,18 +82,28 @@ struct JudgeResult {
 
 enum OutboundEvent {
     case join(clientID: String)
-    case resume(clientID: String, lastSeenMessageID: String?)
+    case resume(clientID: String, lastSeenMessageID: String?, lastSequenceID: Int?)
     case humanMessage(clientID: String, text: String)
 
     var jsonString: String {
         switch self {
         case let .join(clientID):
             return "{\"type\":\"session.join\",\"client_id\":\"\(clientID)\"}"
-        case let .resume(clientID, lastSeen):
+        case let .resume(clientID, lastSeen, lastSequenceID):
+            let seenField: String
             if let lastSeen {
-                return "{\"type\":\"session.resume\",\"client_id\":\"\(clientID)\",\"last_seen_message_id\":\"\(lastSeen)\"}"
+                seenField = "\"last_seen_message_id\":\"\(lastSeen)\""
+            } else {
+                seenField = "\"last_seen_message_id\":null"
             }
-            return "{\"type\":\"session.resume\",\"client_id\":\"\(clientID)\",\"last_seen_message_id\":null}"
+
+            let sequenceField: String
+            if let lastSequenceID {
+                sequenceField = ",\"last_sequence_id\":\(lastSequenceID)"
+            } else {
+                sequenceField = ""
+            }
+            return "{\"type\":\"session.resume\",\"client_id\":\"\(clientID)\",\(seenField)\(sequenceField)}"
         case let .humanMessage(clientID, text):
             let escaped = text
                 .replacingOccurrences(of: "\\", with: "\\\\")
