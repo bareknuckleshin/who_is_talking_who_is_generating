@@ -50,6 +50,11 @@ struct SessionView: View {
                     .font(.caption)
                     .foregroundStyle(.blue)
             }
+            if wsClient.archivedMessageCount > 0 {
+                Text("아카이브된 메시지: \(wsClient.archivedMessageCount)개")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
             if let error = wsClient.errorText {
                 Text(error)
                     .font(.caption)
