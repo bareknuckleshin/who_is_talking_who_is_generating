@@ -5,9 +5,10 @@
 ## 1) 사전 준비
 
 - Docker Desktop(Windows/macOS) 또는 Docker Engine(Linux) 설치
-- 프로젝트 루트에 `.env` 파일 준비
+- `backend/` 디렉터리에 `.env` 파일 준비
 
 ```bash
+cd backend
 cp .env.example .env
 ```
 
@@ -20,9 +21,10 @@ cp .env.example .env
 
 ## 2) 이미지 빌드
 
-프로젝트 루트(`Dockerfile`이 있는 위치)에서 실행:
+`backend/` 디렉터리( `Dockerfile`이 있는 위치)에서 실행:
 
 ```bash
+cd backend
 docker build -t who-is-talking .
 ```
 
@@ -33,6 +35,7 @@ docker build -t who-is-talking .
 기본 실행:
 
 ```bash
+cd backend
 docker run --rm -p 8000:8000 --env-file .env who-is-talking
 ```
 
@@ -49,6 +52,7 @@ docker run --rm -p 8000:8000 --env-file .env who-is-talking
 재시작 시 데이터를 유지하려면 볼륨을 마운트하세요.
 
 ```bash
+cd backend
 docker run --rm \
   -p 8000:8000 \
   --env-file .env \
@@ -91,6 +95,7 @@ curl -X POST http://127.0.0.1:8000/sessions \
 - 해결: 호스트 포트를 변경해 실행
 
 ```bash
+cd backend
 docker run --rm -p 8001:8000 --env-file .env who-is-talking
 ```
 

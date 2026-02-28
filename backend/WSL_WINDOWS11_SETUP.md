@@ -66,6 +66,7 @@ cd ~/workspace
 프로젝트 루트에서:
 
 ```bash
+cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -77,6 +78,7 @@ pip install -r requirements.txt
 ## 5) 환경 변수 파일 설정
 
 ```bash
+cd backend
 cp .env.example .env
 ```
 
@@ -95,6 +97,7 @@ cp .env.example .env
 ## 6) 서버 실행
 
 ```bash
+cd backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
@@ -127,6 +130,7 @@ curl -X POST http://127.0.0.1:8000/sessions \
 WebSocket 테스트:
 
 ```bash
+cd backend
 python scripts/ws_test.py --session-id <session_id>
 ```
 
@@ -135,6 +139,7 @@ python scripts/ws_test.py --session-id <session_id>
 ## 8) 테스트 실행
 
 ```bash
+cd backend
 python -m unittest discover -s tests -v
 ```
 
@@ -162,13 +167,14 @@ python -m unittest discover -s tests -v
 
 ```bash
 # 1) WSL 터미널 진입 후
-cd <project_root>
+cd <project_root>/backend
 source .venv/bin/activate
 
 # 2) 서버 실행
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 # 3) 별도 터미널에서 테스트
+cd backend
 python -m unittest discover -s tests -v
 ```
 
