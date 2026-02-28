@@ -1,54 +1,24 @@
 package com.whoistalking.androidapp
 
-import android.annotation.SuppressLint
 import android.os.Bundle
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import com.whoistalking.androidapp.ui.AppRoot
+import com.whoistalking.androidapp.ui.theme.WhoIsTalkingTheme
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
-    private lateinit var webView: WebView
+    private val viewModel: MainViewModel by viewModels()
 
-    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        webView = findViewById(R.id.webView)
-
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            mediaPlaybackRequiresUserGesture = false
-            javaScriptCanOpenWindowsAutomatically = true
-            setSupportMultipleWindows(false)
-        }
-
-        webView.webViewClient = WebGameViewClient()
-        webView.webChromeClient = WebChromeClient()
-
-        if (savedInstanceState == null) {
-            webView.loadUrl(Config.WEB_APP_URL)
-        }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        webView.saveState(outState)
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        webView.restoreState(savedInstanceState)
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (::webView.isInitialized && webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
+        enableEdgeToEdge()
+        setContent {
+            WhoIsTalkingTheme {
+                AppRoot(viewModel = viewModel)
+            }
         }
     }
 }
