@@ -166,7 +166,7 @@ private fun SessionScreen(
                             shape = RoundedCornerShape(14.dp),
                         ) {
                             Column(Modifier.padding(10.dp)) {
-                                Text("${message.seat} · Turn ${message.turnIndex}", fontWeight = FontWeight.Bold)
+                                Text("${message.seat} · Turn ${message.turnIndex + 1}", fontWeight = FontWeight.Bold)
                                 Spacer(Modifier.height(4.dp))
                                 Text(message.text)
                             }
