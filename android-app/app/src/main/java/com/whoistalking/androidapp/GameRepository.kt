@@ -15,6 +15,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class GameRepository {
     private val json = Json { ignoreUnknownKeys = true }
@@ -62,7 +64,8 @@ class SessionSocket(
     private val onConnection: (connected: Boolean, reconnecting: Boolean, error: String?) -> Unit,
     private val onEvent: (WsInboundEvent) -> Unit,
 ) {
-    private val backoffMs = listOf(1000L, 2000L, 5000L)
+    private val backoffMs = listOf(1000L, 2000L, 5000L, 10000L, 30000L)
+    private val reconnectScheduler = Executors.newSingleThreadScheduledExecutor()
     private var retryIndex = 0
     private var userClosed = false
     private var webSocket: WebSocket? = null
@@ -78,6 +81,7 @@ class SessionSocket(
 
     fun close() {
         userClosed = true
+        reconnectScheduler.shutdownNow()
         webSocket?.close(1000, "Closed by user")
         webSocket = null
     }
@@ -98,7 +102,12 @@ class SessionSocket(
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                onConnection(false, true, t.message ?: "WebSocket error")
+                if (userClosed) {
+                    onConnection(false, false, null)
+                } else {
+                    onConnection(false, true, t.message ?: "WebSocket error")
+                    reconnect(joinPayload)
+                }
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
@@ -114,10 +123,14 @@ class SessionSocket(
     private fun reconnect(joinPayload: JsonObject) {
         val idx = retryIndex.coerceAtMost(backoffMs.lastIndex)
         val delay = backoffMs[idx]
-        onConnection(false, true, "Reconnecting in ${delay / 1000}s")
-        Thread.sleep(delay)
+        onConnection(false, true, "재연결 대기: ${delay / 1000}초")
         retryIndex += 1
-        open(joinPayload)
+
+        reconnectScheduler.schedule({
+            if (!userClosed) {
+                open(joinPayload)
+            }
+        }, delay, TimeUnit.MILLISECONDS)
     }
 
     private fun parseInbound(obj: JsonObject): WsInboundEvent {
@@ -137,6 +150,7 @@ class SessionSocket(
 
             "turn.request_human" -> WsInboundEvent.TurnRequestHuman(
                 timeoutSecs = obj["timeout_secs"]?.jsonPrimitive?.intOrNull,
+                currentSpeakerSeat = obj["current_speaker_seat"]?.jsonPrimitive?.contentOrNull,
             )
 
             "message.typing" -> WsInboundEvent.MessageTyping(
@@ -148,17 +162,28 @@ class SessionSocket(
                 turnIndex = obj["turn_index"]?.jsonPrimitive?.intOrNull ?: 0,
                 seat = obj["seat"]?.jsonPrimitive?.contentOrNull ?: "",
                 text = obj["text"]?.jsonPrimitive?.contentOrNull ?: "",
+                sequenceId = obj["sequence_id"]?.jsonPrimitive?.intOrNull,
+            )
+
+            "message.delta" -> WsInboundEvent.MessageDelta(
+                messageId = obj["message_id"]?.jsonPrimitive?.contentOrNull ?: "",
+                turnIndex = obj["turn_index"]?.jsonPrimitive?.intOrNull ?: 0,
+                seat = obj["seat"]?.jsonPrimitive?.contentOrNull ?: "",
+                delta = obj["delta"]?.jsonPrimitive?.contentOrNull ?: "",
+                sequenceId = obj["sequence_id"]?.jsonPrimitive?.intOrNull,
             )
 
             "turn.next" -> WsInboundEvent.TurnNext(
                 currentSpeakerSeat = obj["current_speaker_seat"]?.jsonPrimitive?.contentOrNull,
                 turnCounts = obj["turn_counts"]?.jsonObject?.mapValues { it.value.jsonPrimitive.intOrNull ?: 0 },
+                sequenceId = obj["sequence_id"]?.jsonPrimitive?.intOrNull,
             )
 
             "session.finished" -> WsInboundEvent.SessionFinished(
                 pickSeat = obj["pick_seat"]?.jsonPrimitive?.contentOrNull ?: "",
                 confidence = obj["confidence"]?.jsonPrimitive?.doubleOrNull ?: 0.0,
                 why = obj["why"]?.jsonPrimitive?.contentOrNull ?: "",
+                sequenceId = obj["sequence_id"]?.jsonPrimitive?.intOrNull,
             )
 
             else -> WsInboundEvent.Unknown(obj)

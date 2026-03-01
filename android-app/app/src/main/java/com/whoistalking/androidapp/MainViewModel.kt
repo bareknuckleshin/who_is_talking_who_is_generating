@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -94,15 +95,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private fun openSession(sessionId: String, wsPath: String) {
         sessionSocket?.close()
 
-        val joinPayload = store.getLastSeenMessageId(sessionId)?.let { lastSeen ->
+        val lastSeen = store.getLastSeenMessageId(sessionId)
+        val lastSequence = store.getLastSequenceId(sessionId)
+
+        val joinPayload = if (lastSeen != null || lastSequence != null) {
             JsonObject(
-                mapOf(
-                    "type" to JsonPrimitive("session.resume"),
-                    "client_id" to JsonPrimitive(store.getOrCreateClientId()),
-                    "last_seen_message_id" to JsonPrimitive(lastSeen),
-                )
+                buildMap {
+                    put("type", JsonPrimitive("session.resume"))
+                    put("client_id", JsonPrimitive(store.getOrCreateClientId()))
+                    put("last_seen_message_id", lastSeen?.let(::JsonPrimitive) ?: JsonNull)
+                    lastSequence?.let { put("last_sequence_id", JsonPrimitive(it)) }
+                }
             )
-        } ?: JsonObject(
+        } else JsonObject(
             mapOf(
                 "type" to JsonPrimitive("session.join"),
                 "client_id" to JsonPrimitive(store.getOrCreateClientId()),
@@ -145,7 +150,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 )
             }
 
-            is WsInboundEvent.TurnRequestHuman -> event.timeoutSecs?.let(::startCountdown)
+            is WsInboundEvent.TurnRequestHuman -> _sessionState.update {
+                event.timeoutSecs?.let(::startCountdown)
+                it.copy(currentSpeakerSeat = event.currentSpeakerSeat ?: it.currentSpeakerSeat)
+            }
 
             is WsInboundEvent.MessageTyping -> {
                 if (event.seat == Config.HUMAN_SEAT) return
@@ -155,13 +163,31 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             is WsInboundEvent.MessageNew -> _sessionState.update { ui ->
                 if (ui.messages.any { it.messageId == event.messageId }) return@update ui
                 store.setLastSeenMessageId(sessionId, event.messageId)
+                event.sequenceId?.let { store.setLastSequenceId(sessionId, it) }
                 ui.copy(
                     messages = ui.messages + ChatMessage(event.messageId, event.turnIndex, event.seat, event.text),
                     typingSeats = ui.typingSeats - event.seat,
                 )
             }
 
+            is WsInboundEvent.MessageDelta -> _sessionState.update { ui ->
+                event.sequenceId?.let { store.setLastSequenceId(sessionId, it) }
+                val existingIndex = ui.messages.indexOfFirst { it.messageId == event.messageId }
+                if (existingIndex < 0) {
+                    ui.copy(
+                        messages = ui.messages + ChatMessage(event.messageId, event.turnIndex, event.seat, event.delta),
+                        typingSeats = ui.typingSeats - event.seat,
+                    )
+                } else {
+                    val updated = ui.messages.toMutableList()
+                    val current = updated[existingIndex]
+                    updated[existingIndex] = current.copy(text = current.text + event.delta)
+                    ui.copy(messages = updated, typingSeats = ui.typingSeats - event.seat)
+                }
+            }
+
             is WsInboundEvent.TurnNext -> _sessionState.update {
+                event.sequenceId?.let { store.setLastSequenceId(sessionId, it) }
                 it.copy(
                     currentSpeakerSeat = event.currentSpeakerSeat,
                     turnCounts = event.turnCounts ?: it.turnCounts,
@@ -169,6 +195,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
 
             is WsInboundEvent.SessionFinished -> _sessionState.update {
+                event.sequenceId?.let { store.setLastSequenceId(sessionId, it) }
                 it.copy(
                     status = SessionStatus.FINISHED,
                     judgeResult = JudgeResult(event.pickSeat, event.confidence, event.why),

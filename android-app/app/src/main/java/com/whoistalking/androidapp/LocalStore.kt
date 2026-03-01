@@ -19,4 +19,14 @@ class LocalStore(app: Application) {
     fun setLastSeenMessageId(sessionId: String, messageId: String) {
         prefs.edit().putString("last_seen_$sessionId", messageId).apply()
     }
+
+    fun getLastSequenceId(sessionId: String): Int? {
+        val raw = prefs.getInt("last_sequence_$sessionId", -1)
+        return if (raw >= 0) raw else null
+    }
+
+    fun setLastSequenceId(sessionId: String, sequenceId: Int) {
+        prefs.edit().putInt("last_sequence_$sessionId", sequenceId).apply()
+    }
+
 }

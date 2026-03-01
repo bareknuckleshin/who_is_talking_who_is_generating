@@ -64,10 +64,11 @@ sealed interface WsInboundEvent {
         val maxChars: Int,
     ) : WsInboundEvent
 
-    data class TurnRequestHuman(val timeoutSecs: Int?) : WsInboundEvent
+    data class TurnRequestHuman(val timeoutSecs: Int?, val currentSpeakerSeat: String?) : WsInboundEvent
     data class MessageTyping(val seat: String) : WsInboundEvent
-    data class MessageNew(val messageId: String, val turnIndex: Int, val seat: String, val text: String) : WsInboundEvent
-    data class TurnNext(val currentSpeakerSeat: String?, val turnCounts: Map<String, Int>?) : WsInboundEvent
-    data class SessionFinished(val pickSeat: String, val confidence: Double, val why: String) : WsInboundEvent
+    data class MessageNew(val messageId: String, val turnIndex: Int, val seat: String, val text: String, val sequenceId: Int?) : WsInboundEvent
+    data class MessageDelta(val messageId: String, val turnIndex: Int, val seat: String, val delta: String, val sequenceId: Int?) : WsInboundEvent
+    data class TurnNext(val currentSpeakerSeat: String?, val turnCounts: Map<String, Int>?, val sequenceId: Int?) : WsInboundEvent
+    data class SessionFinished(val pickSeat: String, val confidence: Double, val why: String, val sequenceId: Int?) : WsInboundEvent
     data class Unknown(val payload: JsonObject) : WsInboundEvent
 }
