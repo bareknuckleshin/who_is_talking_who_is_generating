@@ -15,4 +15,10 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "WhoIsTalkingAndroid"
-include(":app")
+include(
+    ":app",
+    ":core:ui",
+    ":core:domain",
+    ":core:data",
+    ":feature:session"
+)
